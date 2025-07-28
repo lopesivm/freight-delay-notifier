@@ -7,11 +7,12 @@ import {
 } from '@temporalio/workflow';
 import type { CreateDeliveryInput, Delivery } from '@typings';
 
-const { createDeliveryActivity, calculateRouteActivity, updateDeliveryLocationActivity } =
+const { createDeliveryActivity, calculateRouteActivity, updateDeliveryLocationActivity, notifyDelayActivity } =
   proxyActivities<{
     createDeliveryActivity: typeof import('../activities/createDeliveryActivity').createDeliveryActivity;
     calculateRouteActivity: typeof import('../activities/calculateRouteActivity').calculateRouteActivity;
     updateDeliveryLocationActivity: typeof import('../activities/updateDeliveryLocationActivity').updateDeliveryLocationActivity;
+    notifyDelayActivity: typeof import('../activities/notifyDelayActivity').notifyDelayActivity;
   }>({ startToCloseTimeout: '1 minute' });
 
 // ---------- Signals & Queries ----------
@@ -57,14 +58,16 @@ export async function deliveryLifecycleWorkflow(input: DeliveryLifecycleInput): 
     const newEtaEpochSecs = Math.floor(Date.now() / 1000) + routeDurationSeconds;
     const delaySecs = newEtaEpochSecs - currentDelivery.originalEtaEpochSecs;
     if (delaySecs > thresholdSecs) {
-      console.log(
-        '[deliveryLifecycleWorkflow] Delay detected for',
-        currentDelivery.id,
-        'delay',
+      await notifyDelayActivity({
+        id: currentDelivery.id,
         delaySecs,
-        'seconds',
-      );
-      // TODO: replace with real notification signal/activity
+        delivery: {
+          origin: currentDelivery.origin,
+          destination: currentDelivery.destination,
+          contactPhone: currentDelivery.contactPhone,
+          name: currentDelivery.name,
+        },
+      });
     }
   });
 
