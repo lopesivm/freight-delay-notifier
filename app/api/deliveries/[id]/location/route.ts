@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { deliveryService } from '@services/deliveryService';
+import { getTemporalClient } from '@temporalClient';
+import { updateLocationSignal } from '@workflows/deliveryLifecycleWorkflow';
 import { z } from 'zod';
 
 const UpdateLocationSchema = z.object({
@@ -13,22 +14,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const body = await req.json();
     const validatedData = UpdateLocationSchema.parse(body);
 
-    const delivery = await deliveryService.updateDeliveryLocation(
-      id.toString(),
-      validatedData.location,
-    );
+    const client = await getTemporalClient();
+    const handle = client.workflow.getHandle(id.toString());
+    await handle.signal(updateLocationSignal, validatedData.location);
+    console.log('[PATCH] Signal sent');
 
-    if (!delivery) {
-      return NextResponse.json({ error: 'Delivery not found' }, { status: 404 });
-    }
-
-    // Convert Date objects to strings for JSON serialization
-    const serializedDelivery = {
-      ...delivery,
-      createdAt: delivery.createdAt.toISOString(),
-      updatedAt: delivery.updatedAt.toISOString(),
-    };
-    return NextResponse.json({ success: true, delivery: serializedDelivery });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating delivery location:', error);
     if (error instanceof z.ZodError) {

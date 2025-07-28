@@ -9,24 +9,28 @@ import { UpdateLocationModal } from '@/app/components/UpdateLocationModal';
 
 export default function FreightStatusPage() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
 
+  const POLL_INTERVAL_MS = 5000;
+
   useEffect(() => {
     loadDeliveries();
+    const id = setInterval(loadDeliveries, POLL_INTERVAL_MS);
+    return () => clearInterval(id);
   }, []);
 
   const loadDeliveries = async () => {
     try {
-      setLoading(true);
       const data = await deliveryService.getDeliveries();
       setDeliveries(data);
     } catch (error) {
       console.error('Error loading deliveries:', error);
     } finally {
-      setLoading(false);
+      // Only hide spinner after first successful fetch
+      if (initialLoading) setInitialLoading(false);
     }
   };
 
@@ -37,8 +41,8 @@ export default function FreightStatusPage() {
     contactPhone: string;
   }) => {
     try {
-      const newDelivery = await deliveryService.createDelivery(input);
-      setDeliveries((prev) => [...prev, newDelivery]);
+      await deliveryService.createDelivery(input);
+      // Workflow started; delivery will appear in subsequent polling
     } catch (error) {
       console.error('Error creating delivery:', error);
     }
@@ -46,8 +50,8 @@ export default function FreightStatusPage() {
 
   const handleUpdateLocation = async (id: string, location: string) => {
     try {
-      const updatedDelivery = await deliveryService.updateLocation(id, { location });
-      setDeliveries((prev) => prev.map((d) => (d.id === id ? updatedDelivery : d)));
+      await deliveryService.updateLocation(id, { location });
+      // Rely on polling to refresh delivery list
     } catch (error) {
       console.error('Error updating location:', error);
     }
@@ -90,7 +94,7 @@ export default function FreightStatusPage() {
 
         {/* Delivery List Container */}
         <div className="bg-gray-50 border-2 border-gray-300 rounded-xl p-6 shadow-inner">
-          {loading ? (
+          {initialLoading ? (
             <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
               <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mx-auto"></div>
               <p className="mt-4 text-gray-600 font-medium">Loading deliveries...</p>

@@ -7,19 +7,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     const data = CreateDeliveryInputSchema.parse(body);
 
-    const { delivery, workflowId } = await workflowService.createDelivery(data);
+    const { workflowId } = await workflowService.createDelivery(data);
 
-    // Convert Date objects to strings for JSON serialization
-    const serializedDelivery = {
-      ...delivery,
-      createdAt: delivery.createdAt.toISOString(),
-      updatedAt: delivery.updatedAt.toISOString(),
-    };
-    return Response.json({
-      success: true,
-      workflowId,
-      delivery: serializedDelivery,
-    });
+    return Response.json({ success: true, workflowId });
   } catch (error) {
     console.error('Error creating delivery:', error);
     return Response.json({ error: 'Failed to create delivery' }, { status: 500 });
@@ -30,7 +20,7 @@ export async function GET() {
   try {
     const deliveries = await deliveryService.getAllDeliveries();
     // Convert Date objects to strings for JSON serialization
-    const serializedDeliveries = deliveries.map(delivery => ({
+    const serializedDeliveries = deliveries.map((delivery) => ({
       ...delivery,
       createdAt: delivery.createdAt.toISOString(),
       updatedAt: delivery.updatedAt.toISOString(),

@@ -5,6 +5,7 @@ import type {
 import { z } from 'zod';
 import { DeliveryStatus } from '@prisma/client';
 import { CalculateRouteInputSchema, CalculateRouteOutputSchema } from '@schemas/route';
+import { UpdateLocationSignalSchema } from '@schemas/updateLocation';
 
 export interface Delivery {
   id: string;
@@ -32,3 +33,5 @@ export type CreateDeliveryActivityOutput = z.infer<typeof CreateDeliveryActivity
 export type CalculateRouteInput = z.infer<typeof CalculateRouteInputSchema>;
 
 export type CalculateRouteOutput = z.infer<typeof CalculateRouteOutputSchema>;
+
+export type UpdateLocationSignalInput = z.infer<typeof UpdateLocationSignalSchema>;

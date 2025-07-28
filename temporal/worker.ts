@@ -2,15 +2,17 @@ import { Worker } from '@temporalio/worker';
 import { deliveryService } from '@services/deliveryService';
 import { createDeliveryActivity } from '@activities/createDeliveryActivity';
 import { calculateRouteActivity } from '@activities/calculateRouteActivity';
+import { updateDeliveryLocationActivity } from '@activities/updateDeliveryLocationActivity';
 
 async function run() {
   const activities = {
     createDeliveryActivity: (input: any) => createDeliveryActivity(input, deliveryService),
     calculateRouteActivity,
+    updateDeliveryLocationActivity,
   };
 
   const worker = await Worker.create({
-    workflowsPath: require.resolve('@workflows/createDeliveryWorkflow'),
+    workflowsPath: require.resolve('@workflows/deliveryLifecycleWorkflow'),
     activities,
     taskQueue: 'FREIGHT_DELAY_Q',
   });

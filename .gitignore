@@ -112,3 +112,6 @@ temporal-ui/
 ehthumbs.db
 Thumbs.db
 node_modules
+
+# Dev db
+*.db

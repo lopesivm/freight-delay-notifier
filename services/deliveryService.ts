@@ -42,6 +42,7 @@ export class DeliveryService {
    * Create a new delivery
    */
   async createDelivery(data: {
+    id?: string;
     name: string;
     origin: string;
     destination: string;
@@ -52,6 +53,7 @@ export class DeliveryService {
   }): Promise<Delivery> {
     const delivery = await prisma.delivery.create({
       data: {
+        id: data.id,
         name: data.name,
         origin: data.origin,
         destination: data.destination,

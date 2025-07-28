@@ -4,6 +4,7 @@ import type { CreateDeliveryInput, CreateDeliveryActivityOutput } from '@/shared
 import { deliveryService } from '@services/deliveryService';
 
 export interface CreateDeliveryActivityParams extends CreateDeliveryInput {
+  id: string;
   routeDurationSeconds: number;
 }
 
@@ -11,12 +12,13 @@ export async function createDeliveryActivity(
   input: CreateDeliveryActivityParams,
   service = deliveryService,
 ): Promise<CreateDeliveryActivityOutput> {
-  const { name, origin, destination, contactPhone, routeDurationSeconds } =
+  const { id, name, origin, destination, contactPhone, routeDurationSeconds } =
     CreateDeliverySchema.parse(input);
 
   const originalEtaEpochSecs = Math.floor(Date.now() / 1000) + routeDurationSeconds;
 
   const delivery = await service.createDelivery({
+    id,
     name,
     origin,
     destination,

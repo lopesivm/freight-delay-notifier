@@ -17,11 +17,11 @@ class DeliveryService {
     }
   }
 
-  async createDelivery(input: CreateDeliveryInput): Promise<Delivery> {
+  async createDelivery(input: CreateDeliveryInput): Promise<{ workflowId: string }> {
     try {
       const response = await axios.post(`${API_BASE_URL}`, input);
       if (response.data.success) {
-        return response.data.delivery;
+        return { workflowId: response.data.workflowId };
       }
       throw new Error('Failed to create delivery');
     } catch (error) {
@@ -30,16 +30,11 @@ class DeliveryService {
     }
   }
 
-  async updateLocation(id: string, input: UpdateLocationInput): Promise<Delivery> {
+  async updateLocation(id: string, input: UpdateLocationInput): Promise<void> {
     try {
-      const response = await axios.patch(`${API_BASE_URL}/${id}/location`, {
+      await axios.patch(`${API_BASE_URL}/${id}/location`, {
         location: input.location,
       });
-      
-      if (response.data.success) {
-        return response.data.delivery;
-      }
-      throw new Error('Failed to update location');
     } catch (error) {
       console.error('Error updating location:', error);
       throw error;

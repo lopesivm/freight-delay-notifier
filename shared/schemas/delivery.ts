@@ -2,6 +2,7 @@
 import { z } from 'zod';
 
 export const CreateDeliverySchema = z.object({
+  id: z.uuid(),
   name: z.string().min(1, 'Name is required'),
   origin: z.string().min(10, 'Origin is required'),
   destination: z.string().min(10, 'Destination is required'),
@@ -13,11 +14,12 @@ export const CreateDeliverySchema = z.object({
 });
 
 export const CreateDeliveryInputSchema = CreateDeliverySchema.omit({
+  id: true,
   routeDurationSeconds: true,
 });
 
 export const CreateDeliveryActivityOutputSchema = z.object({
-  id: z.string(),
+  id: z.uuid(),
   name: z.string(),
   origin: z.string(),
   destination: z.string(),

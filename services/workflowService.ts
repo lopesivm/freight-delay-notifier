@@ -1,42 +1,31 @@
 import { getTemporalClient } from '@temporalClient';
-import { createDeliveryWorkflow } from '@workflows/createDeliveryWorkflow';
+import { deliveryLifecycleWorkflow } from '@workflows/deliveryLifecycleWorkflow';
 
-import type { Delivery, CreateDeliveryInput } from '@typings';
+import type { CreateDeliveryInput } from '@typings';
 
 export class WorkflowService {
   /**
    * Create a new delivery via Temporal workflow
    */
-  async createDelivery(input: CreateDeliveryInput): Promise<{
-    delivery: Delivery;
-    workflowId: string;
-  }> {
+  async createDelivery(input: CreateDeliveryInput): Promise<{ workflowId: string }> {
     try {
       const client = await getTemporalClient();
 
-      const handle = await client.workflow.start(createDeliveryWorkflow, {
-        args: [input],
-        workflowId: `delivery-${Date.now()}`,
+      const { randomUUID } = await import('crypto');
+      const deliveryId = randomUUID();
+
+      const thresholdSecs = Number(process.env.NOTIFY_THRESHOLD_SECONDS ?? '1800');
+
+      await client.workflow.start(deliveryLifecycleWorkflow, {
+        args: [{ ...input, id: deliveryId, notifyThresholdSecs: thresholdSecs }],
+        workflowId: deliveryId,
         taskQueue: 'FREIGHT_DELAY_Q',
       });
 
-      const delivery = await handle.result();
-
-      const convertedDelivery: Delivery = {
-        ...delivery,
-        originalEtaEpochSecs: Number(delivery.originalEtaEpochSecs),
-        currentRouteDurationSeconds: delivery.currentRouteDurationSeconds,
-        createdAt: new Date(delivery.createdAt),
-        updatedAt: new Date(delivery.updatedAt),
-      };
-
-      return {
-        delivery: convertedDelivery,
-        workflowId: handle.workflowId,
-      };
+      return { workflowId: deliveryId };
     } catch (error) {
-      console.error('Error in createDelivery workflow:', error);
-      throw new Error('Failed to create delivery via workflow');
+      console.error('Error starting delivery workflow:', error);
+      throw new Error('Failed to start delivery workflow');
     }
   }
 }
