@@ -1,17 +1,36 @@
 {
   "extends": "@tsconfig/node22/tsconfig.json",
-  "version": "5.6.3",
   "compilerOptions": {
-    "lib": [
-      "es2021"
-    ],
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "rootDir": "./src",
-    "outDir": "./lib"
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@typings": ["shared/types.ts"],
+      "@schemas/*": ["shared/schemas/*.ts"],
+      "@services/*": ["services/*.ts"],
+      "@activities/*": ["temporal/activities/*.ts"],
+      "@workflows/*": ["temporal/workflows/*.ts"],
+      "@temporalClient": ["temporal/client.ts"],
+      "@db": ["prisma/db.ts"]
+    },
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", ".next", "dist"]
 }

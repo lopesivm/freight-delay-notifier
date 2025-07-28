@@ -1,0 +1,30 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum DeliveryStatus {
+  ON_ROUTE
+  DELAYED
+  DELIVERED
+  NOTIFIED
+}
+
+model Delivery {
+  id                          String         @id @default(uuid())
+  name                        String
+  origin                      String
+  destination                 String
+  contactPhone                String
+  createdAt                   DateTime       @default(now())
+  updatedAt                   DateTime       @updatedAt
+  originalEtaEpochSecs        BigInt
+  currentRouteDurationSeconds Int
+  status                      DeliveryStatus
+  notified                    Boolean        @default(false)
+  currentLocation             String
+}
