@@ -71,24 +71,30 @@
 
 ```mermaid
 flowchart TD
-  subgraph Browser / React UI
-    UI[FreightStatusPage] -->|REST
+  subgraph Browser
+    UI[FreightStatusPage]
   end
 
-  UI --> API
-  subgraph Next.js API Routes
-    API -->|HTTP JSON| Prisma
-    API -->|Signals / Client| TemporalClient
+  subgraph "Next.js API Routes"
+    API[API Route Layer]
   end
 
-  subgraph Temporal Cluster (dev)
-    TemporalClient --> Worker
-    Worker -->|Activities| Prisma
-    Worker -->|Twilio SMS| Twilio((Twilio))
-    Worker -->|External API| GMaps[(Google Routes)]
+  subgraph "Temporal Cluster (dev)"
+    TemporalClient[Temporal Client] --> Worker[Worker]
   end
 
-  Prisma[(SQLite / Postgres)]
+  subgraph Services
+    Prisma[(SQLite / Postgres)]
+    Twilio((Twilio SMS))
+    GMaps[(Google Routes)]
+  end
+
+  UI -- REST --> API
+  API -- "Prisma Client" --> Prisma
+  API -- "Workflow Client" --> TemporalClient
+  Worker -- Activities --> Prisma
+  Worker -- SMS --> Twilio
+  Worker -- "Route ETA" --> GMaps
 ```
 
 ---
