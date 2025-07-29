@@ -12,7 +12,6 @@ export const CalculateRouteOutputSchema = z.object({
     .positive('Route duration must be a positive number of seconds'),
 });
 
-// Google Maps API response schema
 export const GoogleRouteResponseSchema = z.object({
   routes: z
     .array(

@@ -1,11 +1,11 @@
 import { CreateDeliveryRequestSchema } from '@schemas/delivery';
+import { readJson } from '../../../shared/http';
 import { deliveryService } from '@services/deliveryService';
 import { workflowService } from '@services/workflowService';
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const data = CreateDeliveryRequestSchema.parse(body);
+    const data = await readJson(req, CreateDeliveryRequestSchema);
 
     const { workflowId } = await workflowService.createDelivery(data);
 

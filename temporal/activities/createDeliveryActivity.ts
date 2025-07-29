@@ -1,6 +1,6 @@
 // temporal/activities/createDeliveryActivity.ts
 import { CreateDeliverySchema, CreateDeliveryActivityOutputSchema } from '@schemas/delivery';
-import type { CreateDeliveryInput, CreateDeliveryActivityOutput } from '@/shared/types';
+import type { CreateDeliveryInput, CreateDeliveryActivityOutput } from '@typings';
 import { deliveryService } from '@services/deliveryService';
 
 export interface CreateDeliveryActivityParams extends CreateDeliveryInput {
@@ -28,7 +28,6 @@ export async function createDeliveryActivity(
     currentRouteDurationSeconds: routeDurationSeconds,
   });
 
-  // Convert to the expected output format
   return CreateDeliveryActivityOutputSchema.parse({
     ...delivery,
     originalEtaEpochSecs: delivery.originalEtaEpochSecs,

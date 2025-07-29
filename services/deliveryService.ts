@@ -3,15 +3,12 @@ import type { Delivery } from '@typings';
 import { DeliveryStatus } from '@prisma/client';
 
 export class DeliveryService {
-  /**
-   * Get all deliveries from the database
-   */
   async getAllDeliveries(): Promise<Delivery[]> {
     const deliveries = await prisma.delivery.findMany({
       orderBy: { createdAt: 'desc' },
     });
 
-    // Convert BigInt fields to numbers
+    // Convert BigInt fields to numbers for serialization
     return deliveries.map((delivery) => ({
       ...delivery,
       originalEtaEpochSecs: Number(delivery.originalEtaEpochSecs),
@@ -19,9 +16,6 @@ export class DeliveryService {
     }));
   }
 
-  /**
-   * Get a single delivery by ID
-   */
   async getDeliveryById(id: string): Promise<Delivery | null> {
     const delivery = await prisma.delivery.findUnique({
       where: { id },
@@ -38,9 +32,6 @@ export class DeliveryService {
     };
   }
 
-  /**
-   * Create a new delivery
-   */
   async createDelivery(data: {
     id?: string;
     name: string;
@@ -72,12 +63,6 @@ export class DeliveryService {
     };
   }
 
-  /**
-   * Update delivery location and ETA
-   */
-  /**
-   * Update delivery status / notified flag
-   */
   async updateDeliveryStatus(
     id: string,
     status: DeliveryStatus,

@@ -1,4 +1,4 @@
-import { Delivery, CreateDeliveryInput, UpdateLocationInput } from '@typings';
+import { Delivery, CreateDeliveryRequest, UpdateLocationInput } from '@typings';
 import axios from 'axios';
 
 const API_BASE_URL = '/api/deliveries';
@@ -17,7 +17,7 @@ class DeliveryService {
     }
   }
 
-  async createDelivery(input: Omit<CreateDeliveryInput, 'id'>): Promise<{ workflowId: string }> {
+  async createDelivery(input: CreateDeliveryRequest): Promise<{ workflowId: string }> {
     try {
       const response = await axios.post(`${API_BASE_URL}`, input);
       if (response.data.success) {

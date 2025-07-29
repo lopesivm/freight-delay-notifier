@@ -18,9 +18,9 @@
       "@activities/*": ["temporal/activities/*.ts"],
       "@workflows/*": ["temporal/workflows/*.ts"],
       "@temporalClient": ["temporal/client.ts"],
-      "@db": ["prisma/db.ts"]
+      "@db": ["prisma/db.ts"],
+      "@shared/*": ["shared/*.ts"]
     },
-    "allowJs": true,
     "noEmit": true,
     "incremental": true,
     "resolveJsonModule": true,
@@ -29,7 +29,8 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "allowJs": true
   },
   "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts", ".next/types/**/*.ts"],
   "exclude": ["node_modules", ".next", "dist"]

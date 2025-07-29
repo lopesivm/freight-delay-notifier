@@ -8,16 +8,6 @@ export interface NotifyDelayActivityInput {
   message: string;
 }
 
-/**
- * Send an SMS via Twilio when a delivery is delayed beyond the threshold.
- * Falls back to console.log if Twilio environment variables are not configured.
- *
- * Required env vars (all must be set):
- *   TWILIO_ACCOUNT_SID
- *   TWILIO_AUTH_TOKEN
- *   TWILIO_PHONE_NUMBER  – verified or purchased sending number
- */
-// Create a singleton Twilio client at module load. If env vars are missing we create a dummy that will never be used because the activity will throw before sending.
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER } = process.env;
 const twilioClientSingleton =
   TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN ? twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) : null;

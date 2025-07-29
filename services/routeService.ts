@@ -7,11 +7,9 @@ if (!GMAPS_KEY) {
   throw new Error('GMAPS_KEY environment variable is required');
 }
 
-// Ensure GMAPS_KEY is non-undefined for TypeScript
 const apiKey: string = GMAPS_KEY;
 
 export async function getRouteDuration(input: CalculateRouteInput): Promise<CalculateRouteOutput> {
-  // Validate input
   const validatedInput = CalculateRouteInputSchema.parse(input);
 
   const response = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
@@ -35,7 +33,6 @@ export async function getRouteDuration(input: CalculateRouteInput): Promise<Calc
 
   const json = await response.json();
 
-  // Validate response
   const validatedResponse = GoogleRouteResponseSchema.parse(json);
 
   const durationStr = validatedResponse.routes[0].duration;

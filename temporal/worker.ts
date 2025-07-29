@@ -11,7 +11,8 @@ async function run() {
   const activities = {
     createDeliveryActivity: (input: any) => createDeliveryActivity(input, deliveryService),
     calculateRouteActivity,
-    updateDeliveryLocationActivity,
+    updateDeliveryLocationActivity: (input: any) =>
+      updateDeliveryLocationActivity(input, deliveryService),
     notifyDelayActivity,
     generateDelayMessageActivity,
     updateDeliveryStatusActivity,

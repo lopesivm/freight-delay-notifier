@@ -4,8 +4,11 @@ import {
   defineQuery,
   setHandler,
   condition,
+  continueAsNew,
 } from '@temporalio/workflow';
+
 import type { CreateDeliveryInput, Delivery } from '@typings';
+import { AUTO_DELIVER_SECONDS, MAX_LOOPS_BEFORE_CAN } from '../constants';
 
 const {
   createDeliveryActivity,
@@ -21,7 +24,15 @@ const {
   notifyDelayActivity: typeof import('../activities/notifyDelayActivity').notifyDelayActivity;
   generateDelayMessageActivity: typeof import('../activities/generateDelayMessageActivity').generateDelayMessageActivity;
   updateDeliveryStatusActivity: typeof import('../activities/updateDeliveryStatusActivity').updateDeliveryStatusActivity;
-}>({ startToCloseTimeout: '1 minute' });
+}>({
+  startToCloseTimeout: '30 seconds',
+  scheduleToStartTimeout: '30 seconds',
+  retry: {
+    maximumAttempts: 5,
+    initialInterval: '5 seconds',
+    backoffCoefficient: 2,
+  },
+});
 
 // ---------- Signals & Queries ----------
 export const updateLocationSignal = defineSignal<[string]>('updateLocation');
@@ -35,20 +46,18 @@ interface DeliveryLifecycleInput extends CreateDeliveryInput {
 
 export async function deliveryLifecycleWorkflow(input: DeliveryLifecycleInput): Promise<void> {
   let isDelivered = false;
-  // 1. Persist delivery
-  // 1a. Calculate route duration
+  let updateCount = 0;
+
   const { routeDurationSeconds } = await calculateRouteActivity({
     origin: input.origin,
     destination: input.destination,
   });
 
-  // 1b. Persist delivery with calculated ETA
   let currentDelivery = await createDeliveryActivity({
     ...input,
     routeDurationSeconds,
   });
 
-  // Helper to mark delivery as delivered and persist status
   const completeDelivery = async () => {
     await updateDeliveryStatusActivity({
       id: currentDelivery.id,
@@ -59,28 +68,23 @@ export async function deliveryLifecycleWorkflow(input: DeliveryLifecycleInput): 
     isDelivered = true;
   };
 
-  // 2. Signal handlers
   setHandler(updateLocationSignal, async (newLocation: string) => {
-    // a) Recalculate route duration
+    updateCount += 1;
     const { routeDurationSeconds } = await calculateRouteActivity({
       origin: newLocation,
       destination: currentDelivery.destination,
     });
 
-    // b) Update DB + local state
     currentDelivery = await updateDeliveryLocationActivity({
       id: currentDelivery.id,
       location: newLocation,
       routeDurationSeconds,
     });
 
-    // c) Delivery completion detection
-    if (routeDurationSeconds <= 30) {
+    if (routeDurationSeconds <= AUTO_DELIVER_SECONDS) {
       await completeDelivery();
       return;
     }
-
-    // d) Delay detection
     const thresholdSecs = input.notifyThresholdSecs;
     const newEtaEpochSecs = Math.floor(Date.now() / 1000) + routeDurationSeconds;
     const delaySecs = newEtaEpochSecs - currentDelivery.originalEtaEpochSecs;
@@ -98,7 +102,6 @@ export async function deliveryLifecycleWorkflow(input: DeliveryLifecycleInput): 
           message,
         });
 
-        // Persist that the delivery has been notified and is delayed
         await updateDeliveryStatusActivity({
           id: currentDelivery.id,
           status: 'DELAYED',
@@ -108,18 +111,20 @@ export async function deliveryLifecycleWorkflow(input: DeliveryLifecycleInput): 
         currentDelivery.notified = true;
       }
     }
+
+    // Rotate run after many updates to keep workflow history small
+    if (updateCount >= MAX_LOOPS_BEFORE_CAN) {
+      await continueAsNew<typeof deliveryLifecycleWorkflow>(input);
+    }
   });
 
-  // b) explicit delivered signal
   setHandler(markDeliveredSignal, async () => {
     if (!isDelivered) {
       await completeDelivery();
     }
   });
 
-  // 3. Query handler
   setHandler(getDeliveryQuery, () => currentDelivery);
 
-  // 4. Wait until delivered
   await condition(() => isDelivered);
 }

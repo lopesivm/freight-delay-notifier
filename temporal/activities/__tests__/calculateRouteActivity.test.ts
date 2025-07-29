@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { calculateRouteActivity } from '../calculateRouteActivity';
-import { getRouteDuration } from '@/services/routeService';
+import { getRouteDuration } from '@services/routeService';
 
 // Mock the route service
-vi.mock('@/services/routeService', () => ({
+vi.mock('@services/routeService', () => ({
   getRouteDuration: vi.fn(),
 }));
 
@@ -17,7 +17,7 @@ describe('calculateRouteActivity', () => {
     vi.setSystemTime(mockNow);
 
     vi.mocked(getRouteDuration).mockResolvedValue({
-      routeDurationSeconds: 3600, // 1 hour from now in seconds
+      routeDurationSeconds: 3600,
     });
 
     const input = {
@@ -39,7 +39,7 @@ describe('calculateRouteActivity', () => {
 
   it('should validate input with Zod', async () => {
     const invalidInput = {
-      origin: '', // empty string should fail validation
+      origin: '',
       destination: 'Boston, MA',
     };
 
@@ -49,7 +49,7 @@ describe('calculateRouteActivity', () => {
 
   it('should validate output with Zod', async () => {
     vi.mocked(getRouteDuration).mockResolvedValue({
-      routeDurationSeconds: -1, // negative should fail validation
+      routeDurationSeconds: -1,
     });
 
     const input = {

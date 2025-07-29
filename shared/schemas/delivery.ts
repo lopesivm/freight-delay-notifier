@@ -18,7 +18,6 @@ export const CreateDeliveryInputSchema = CreateDeliverySchema.omit({
   routeDurationSeconds: true,
 });
 
-// Frontend/API request without id (generated server-side)
 export const CreateDeliveryRequestSchema = CreateDeliveryInputSchema.omit({
   id: true,
 });

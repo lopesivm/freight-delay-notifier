@@ -1,17 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { CreateDeliveryInput } from '@typings';
+import { CreateDeliveryRequest } from '@typings';
 import { Modal } from './Modal';
 
 interface CreateDeliveryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreate: (input: CreateDeliveryInput) => Promise<void>;
+  onCreate: (input: CreateDeliveryRequest) => Promise<void>;
 }
 
 export function CreateDeliveryModal({ open, onOpenChange, onCreate }: CreateDeliveryModalProps) {
-  const [formData, setFormData] = useState<CreateDeliveryInput>({
+  const [formData, setFormData] = useState<CreateDeliveryRequest>({
     name: '',
     origin: '',
     destination: '',
@@ -33,7 +33,7 @@ export function CreateDeliveryModal({ open, onOpenChange, onCreate }: CreateDeli
     }
   };
 
-  const handleChange = (field: keyof CreateDeliveryInput, value: string) => {
+  const handleChange = (field: keyof CreateDeliveryRequest, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 

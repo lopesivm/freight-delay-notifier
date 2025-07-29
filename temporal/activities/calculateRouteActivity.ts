@@ -7,9 +7,10 @@ type CalculateRouteOutput = z.infer<typeof CalculateRouteOutputSchema>;
 
 export async function calculateRouteActivity(
   input: CalculateRouteInput,
+  routeDurationFn: typeof getRouteDuration = getRouteDuration,
 ): Promise<CalculateRouteOutput> {
   const validatedInput = CalculateRouteInputSchema.parse(input);
-  const routeResult = await getRouteDuration(validatedInput);
+  const routeResult = await routeDurationFn(validatedInput);
 
   return CalculateRouteOutputSchema.parse(routeResult);
 }

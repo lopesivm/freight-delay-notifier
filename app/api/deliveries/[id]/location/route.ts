@@ -2,29 +2,27 @@ import { NextResponse } from 'next/server';
 import { getTemporalClient } from '@temporalClient';
 import { updateLocationSignal } from '@workflows/deliveryLifecycleWorkflow';
 import { z } from 'zod';
+import { readJson } from '@shared/http';
 
 const UpdateLocationSchema = z.object({
-  location: z.string().min(1),
+  location: z.string().min(10),
 });
-0;
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params;
-    const body = await req.json();
-    const validatedData = UpdateLocationSchema.parse(body);
+    const { location } = await readJson(req, UpdateLocationSchema);
 
     const client = await getTemporalClient();
-    const handle = client.workflow.getHandle(id.toString());
-    await handle.signal(updateLocationSignal, validatedData.location);
-    console.log('[PATCH] Signal sent');
+    const handle = client.workflow.getHandle(params.id);
+    await handle.signal(updateLocationSignal, location);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating delivery location:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid input data' }, { status: 400 });
+    if (error instanceof Response) return error; // handled validation
+    if (error instanceof Error && error.name === 'WorkflowNotFoundError') {
+      return NextResponse.json({ error: 'Delivery not found' }, { status: 404 });
     }
+    console.error('Error updating delivery location:', error);
     return NextResponse.json({ error: 'Failed to update location' }, { status: 500 });
   }
 }

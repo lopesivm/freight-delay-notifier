@@ -8,10 +8,6 @@ export interface UpdateDeliveryStatusActivityInput {
   notified?: boolean;
 }
 
-/**
- * Updates delivery status (and optional notified flag).
- * Non-retryable failure if the update fails with a known business error.
- */
 export async function updateDeliveryStatusActivity(
   { id, status, notified }: UpdateDeliveryStatusActivityInput,
   service = deliveryService,

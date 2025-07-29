@@ -8,7 +8,27 @@ declare global {
 }
 
 if (!global.__prisma__) {
-  global.__prisma__ = new PrismaClient();
+  const client = new PrismaClient();
+
+  const shutdown = async () => {
+    try {
+      await client.$disconnect();
+      // eslint-disable-next-line no-process-exit
+      process.exit(0);
+    } catch (err) {
+      console.error('Error during Prisma disconnect', err);
+      // eslint-disable-next-line no-process-exit
+      process.exit(1);
+    }
+  };
+
+  process.once('SIGINT', shutdown);
+  process.once('SIGTERM', shutdown);
+  process.once('beforeExit', async () => {
+    await client.$disconnect();
+  });
+
+  global.__prisma__ = client;
 }
 
 prisma = global.__prisma__;

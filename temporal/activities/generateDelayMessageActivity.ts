@@ -6,10 +6,6 @@ export interface GenerateDelayMessageInput {
   destination: string;
 }
 
-/**
- * Generates a user-friendly delay message using OpenAI.
- * Falls back to a canned string if the API key is missing or the request fails.
- */
 export async function generateDelayMessageActivity({
   minutes,
   origin,

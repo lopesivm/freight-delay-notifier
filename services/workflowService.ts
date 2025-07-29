@@ -3,11 +3,9 @@ import { deliveryLifecycleWorkflow } from '@workflows/deliveryLifecycleWorkflow'
 
 import { randomUUID } from 'crypto';
 import type { CreateDeliveryRequest } from '@typings';
+import { WorkflowIdReusePolicy } from '@temporalio/client';
 
 export class WorkflowService {
-  /**
-   * Create a new delivery via Temporal workflow
-   */
   async createDelivery(input: CreateDeliveryRequest): Promise<{ workflowId: string }> {
     try {
       const client = await getTemporalClient();
@@ -19,6 +17,7 @@ export class WorkflowService {
         args: [{ id, ...input, notifyThresholdSecs: thresholdSecs }],
         workflowId: id,
         taskQueue: 'FREIGHT_DELAY_Q',
+        workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
       });
 
       return { workflowId: id };
@@ -28,9 +27,6 @@ export class WorkflowService {
     }
   }
 
-  /**
-   * Emit markDelivered signal to running workflow
-   */
   async markDelivered(id: string): Promise<void> {
     try {
       const client = await getTemporalClient();
