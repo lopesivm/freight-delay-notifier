@@ -1,5 +1,6 @@
 // shared/schemas/delivery.ts
 import { z } from 'zod';
+import { DeliveryStatus } from '@prisma/client';
 
 export const CreateDeliverySchema = z.object({
   id: z.uuid(),
@@ -14,8 +15,12 @@ export const CreateDeliverySchema = z.object({
 });
 
 export const CreateDeliveryInputSchema = CreateDeliverySchema.omit({
-  id: true,
   routeDurationSeconds: true,
+});
+
+// Frontend/API request without id (generated server-side)
+export const CreateDeliveryRequestSchema = CreateDeliveryInputSchema.omit({
+  id: true,
 });
 
 export const CreateDeliveryActivityOutputSchema = z.object({
@@ -24,10 +29,11 @@ export const CreateDeliveryActivityOutputSchema = z.object({
   origin: z.string(),
   destination: z.string(),
   contactPhone: z.string(),
-  status: z.enum(['ON_ROUTE', 'DELAYED', 'DELIVERED', 'NOTIFIED']),
+  status: z.enum(DeliveryStatus),
   createdAt: z.date(),
   updatedAt: z.date(),
   originalEtaEpochSecs: z.number(),
   currentRouteDurationSeconds: z.number(),
   currentLocation: z.string(),
+  notified: z.boolean(),
 });

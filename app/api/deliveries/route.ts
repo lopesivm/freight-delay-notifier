@@ -1,11 +1,11 @@
-import { CreateDeliveryInputSchema } from '@schemas/delivery';
+import { CreateDeliveryRequestSchema } from '@schemas/delivery';
 import { deliveryService } from '@services/deliveryService';
 import { workflowService } from '@services/workflowService';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const data = CreateDeliveryInputSchema.parse(body);
+    const data = CreateDeliveryRequestSchema.parse(body);
 
     const { workflowId } = await workflowService.createDelivery(data);
 

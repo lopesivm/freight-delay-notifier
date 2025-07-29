@@ -1,6 +1,7 @@
 import { createDeliveryActivity } from '../createDeliveryActivity';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DeliveryStatus } from '@prisma/client';
+import { randomUUID } from 'crypto';
 
 // Mock the delivery service
 const mockDeliveryService = {
@@ -8,11 +9,15 @@ const mockDeliveryService = {
   getAllDeliveries: vi.fn(),
   getDeliveryById: vi.fn(),
   updateDeliveryLocation: vi.fn(),
+  updateDeliveryStatus: vi.fn(),
 };
+
+const testId = randomUUID();
+const altTestId = randomUUID();
 
 // Base mock delivery from service (as returned by deliveryService)
 const baseMockDelivery = {
-  id: '123e4567-e89b-12d3-a456-426614174000',
+  id: testId,
   name: 'Test Delivery',
   origin: 'New York City, NY 10001',
   destination: 'Los Angeles, CA 90210',
@@ -28,7 +33,7 @@ const baseMockDelivery = {
 
 // Expected output matches the schema exactly
 const baseExpectedOutput = {
-  id: '123e4567-e89b-12d3-a456-426614174000',
+  id: testId,
   name: 'Test Delivery',
   origin: 'New York City, NY 10001',
   destination: 'Los Angeles, CA 90210',
@@ -43,6 +48,7 @@ const baseExpectedOutput = {
 
 // Base valid input object
 const baseValidInput = {
+  id: testId,
   name: 'Test Delivery',
   origin: 'New York City, NY 10001',
   destination: 'Los Angeles, CA 90210',
@@ -63,6 +69,7 @@ describe('createDeliveryActivity', () => {
     const result = await createDeliveryActivity(input, mockDeliveryService);
 
     expect(mockDeliveryService.createDelivery).toHaveBeenCalledWith({
+      id: testId,
       name: 'Test Delivery',
       origin: 'New York City, NY 10001',
       destination: 'Los Angeles, CA 90210',
@@ -72,7 +79,7 @@ describe('createDeliveryActivity', () => {
       currentRouteDurationSeconds: 3600,
     });
 
-    expect(result).toEqual(baseExpectedOutput);
+    expect(result).toEqual({ ...baseExpectedOutput, notified: false });
   });
 
   it('should handle missing required fields', async () => {
@@ -88,7 +95,7 @@ describe('createDeliveryActivity', () => {
   it('should create delivery with correct ETA values', async () => {
     const mockDelivery = {
       ...baseMockDelivery,
-      id: '456e7890-e12b-34c5-d678-901234567890',
+      id: altTestId,
     };
     mockDeliveryService.createDelivery.mockResolvedValue(mockDelivery);
 
@@ -96,6 +103,7 @@ describe('createDeliveryActivity', () => {
 
     expect(mockDeliveryService.createDelivery).toHaveBeenCalledWith(
       expect.objectContaining({
+        id: testId,
         originalEtaEpochSecs: expect.any(Number),
         currentRouteDurationSeconds: 3600,
       }),

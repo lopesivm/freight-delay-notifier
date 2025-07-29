@@ -9,6 +9,7 @@ interface UpdateLocationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate: (id: string, location: string) => Promise<void>;
+  onMarkDelivered: (id: string) => Promise<void>;
 }
 
 export function UpdateLocationModal({
@@ -16,6 +17,7 @@ export function UpdateLocationModal({
   open,
   onOpenChange,
   onUpdate,
+  onMarkDelivered,
 }: UpdateLocationModalProps) {
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,7 +51,19 @@ export function UpdateLocationModal({
 
   return (
     <Modal open={open} onClose={() => onOpenChange(false)} title="Update Delivery Location">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 relative">
+        {/* Mark Delivered button top-right */}
+        <button
+          type="button"
+          onClick={async () => {
+            if (delivery) await onMarkDelivered(delivery.id);
+            onOpenChange(false);
+          }}
+          disabled={loading}
+          className="absolute top-0 right-0 mt-2 mr-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg disabled:opacity-50"
+        >
+          Mark Delivered
+        </button>
         <div className="bg-gray-50 rounded-lg p-3 mb-4">
           <div className="text-sm text-gray-600">Current location:</div>
           <div className="text-sm text-gray-600 mt-1">

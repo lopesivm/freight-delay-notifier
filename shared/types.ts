@@ -1,6 +1,7 @@
 import type {
   CreateDeliveryActivityOutputSchema,
   CreateDeliveryInputSchema,
+  CreateDeliveryRequestSchema,
 } from '@schemas/delivery';
 import { z } from 'zod';
 import { DeliveryStatus } from '@prisma/client';
@@ -19,6 +20,7 @@ export interface Delivery {
   originalEtaEpochSecs: number;
   currentRouteDurationSeconds: number;
   currentLocation: string;
+  notified: boolean;
 }
 
 export interface UpdateLocationInput {
@@ -35,3 +37,5 @@ export type CalculateRouteInput = z.infer<typeof CalculateRouteInputSchema>;
 export type CalculateRouteOutput = z.infer<typeof CalculateRouteOutputSchema>;
 
 export type UpdateLocationSignalInput = z.infer<typeof UpdateLocationSignalSchema>;
+
+export type CreateDeliveryRequest = z.infer<typeof CreateDeliveryRequestSchema>;

@@ -33,5 +33,6 @@ export async function createDeliveryActivity(
     ...delivery,
     originalEtaEpochSecs: delivery.originalEtaEpochSecs,
     currentRouteDurationSeconds: delivery.currentRouteDurationSeconds,
+    notified: delivery.notified,
   });
 }

@@ -17,8 +17,6 @@ export function DeliveryCard({ delivery, onClick }: DeliveryCardProps) {
         return 'bg-yellow-100 text-yellow-800';
       case DeliveryStatus.DELIVERED:
         return 'bg-green-100 text-green-800';
-      case DeliveryStatus.NOTIFIED:
-        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -63,7 +61,7 @@ export function DeliveryCard({ delivery, onClick }: DeliveryCardProps) {
       </div>
 
       {/* Notification badge */}
-      {delivery.status === DeliveryStatus.NOTIFIED && (
+      {delivery.notified && (
         <div className="bg-orange-100 border border-orange-300 rounded-md p-2">
           <div className="text-xs font-medium text-orange-800">⚠️ Delay Notified</div>
         </div>

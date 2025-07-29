@@ -7,16 +7,25 @@ import {
 } from '@temporalio/workflow';
 import type { CreateDeliveryInput, Delivery } from '@typings';
 
-const { createDeliveryActivity, calculateRouteActivity, updateDeliveryLocationActivity, notifyDelayActivity } =
-  proxyActivities<{
-    createDeliveryActivity: typeof import('../activities/createDeliveryActivity').createDeliveryActivity;
-    calculateRouteActivity: typeof import('../activities/calculateRouteActivity').calculateRouteActivity;
-    updateDeliveryLocationActivity: typeof import('../activities/updateDeliveryLocationActivity').updateDeliveryLocationActivity;
-    notifyDelayActivity: typeof import('../activities/notifyDelayActivity').notifyDelayActivity;
-  }>({ startToCloseTimeout: '1 minute' });
+const {
+  createDeliveryActivity,
+  calculateRouteActivity,
+  updateDeliveryLocationActivity,
+  notifyDelayActivity,
+  generateDelayMessageActivity,
+  updateDeliveryStatusActivity,
+} = proxyActivities<{
+  createDeliveryActivity: typeof import('../activities/createDeliveryActivity').createDeliveryActivity;
+  calculateRouteActivity: typeof import('../activities/calculateRouteActivity').calculateRouteActivity;
+  updateDeliveryLocationActivity: typeof import('../activities/updateDeliveryLocationActivity').updateDeliveryLocationActivity;
+  notifyDelayActivity: typeof import('../activities/notifyDelayActivity').notifyDelayActivity;
+  generateDelayMessageActivity: typeof import('../activities/generateDelayMessageActivity').generateDelayMessageActivity;
+  updateDeliveryStatusActivity: typeof import('../activities/updateDeliveryStatusActivity').updateDeliveryStatusActivity;
+}>({ startToCloseTimeout: '1 minute' });
 
 // ---------- Signals & Queries ----------
 export const updateLocationSignal = defineSignal<[string]>('updateLocation');
+export const markDeliveredSignal = defineSignal('markDelivered');
 export const getDeliveryQuery = defineQuery<Delivery>('getDelivery');
 
 interface DeliveryLifecycleInput extends CreateDeliveryInput {
@@ -25,6 +34,7 @@ interface DeliveryLifecycleInput extends CreateDeliveryInput {
 }
 
 export async function deliveryLifecycleWorkflow(input: DeliveryLifecycleInput): Promise<void> {
+  let isDelivered = false;
   // 1. Persist delivery
   // 1a. Calculate route duration
   const { routeDurationSeconds } = await calculateRouteActivity({
@@ -38,7 +48,18 @@ export async function deliveryLifecycleWorkflow(input: DeliveryLifecycleInput): 
     routeDurationSeconds,
   });
 
-  // 2. Signal handler
+  // Helper to mark delivery as delivered and persist status
+  const completeDelivery = async () => {
+    await updateDeliveryStatusActivity({
+      id: currentDelivery.id,
+      status: 'DELIVERED',
+      notified: currentDelivery.notified,
+    });
+    currentDelivery.status = 'DELIVERED';
+    isDelivered = true;
+  };
+
+  // 2. Signal handlers
   setHandler(updateLocationSignal, async (newLocation: string) => {
     // a) Recalculate route duration
     const { routeDurationSeconds } = await calculateRouteActivity({
@@ -53,27 +74,52 @@ export async function deliveryLifecycleWorkflow(input: DeliveryLifecycleInput): 
       routeDurationSeconds,
     });
 
-    // c) Delay detection
+    // c) Delivery completion detection
+    if (routeDurationSeconds <= 30) {
+      await completeDelivery();
+      return;
+    }
+
+    // d) Delay detection
     const thresholdSecs = input.notifyThresholdSecs;
     const newEtaEpochSecs = Math.floor(Date.now() / 1000) + routeDurationSeconds;
     const delaySecs = newEtaEpochSecs - currentDelivery.originalEtaEpochSecs;
     if (delaySecs > thresholdSecs) {
-      await notifyDelayActivity({
-        id: currentDelivery.id,
-        delaySecs,
-        delivery: {
+      if (!currentDelivery.notified && currentDelivery.status !== 'DELIVERED') {
+        const message = await generateDelayMessageActivity({
+          minutes: Math.round(delaySecs / 60),
           origin: currentDelivery.origin,
           destination: currentDelivery.destination,
+        });
+
+        await notifyDelayActivity({
+          id: currentDelivery.id,
           contactPhone: currentDelivery.contactPhone,
-          name: currentDelivery.name,
-        },
-      });
+          message,
+        });
+
+        // Persist that the delivery has been notified and is delayed
+        await updateDeliveryStatusActivity({
+          id: currentDelivery.id,
+          status: 'DELAYED',
+          notified: true,
+        });
+        currentDelivery.status = 'DELAYED';
+        currentDelivery.notified = true;
+      }
+    }
+  });
+
+  // b) explicit delivered signal
+  setHandler(markDeliveredSignal, async () => {
+    if (!isDelivered) {
+      await completeDelivery();
     }
   });
 
   // 3. Query handler
   setHandler(getDeliveryQuery, () => currentDelivery);
 
-  // 4. Park forever (until future complete signal is added)
-  await condition(() => false);
+  // 4. Wait until delivered
+  await condition(() => isDelivered);
 }

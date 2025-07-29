@@ -4,6 +4,8 @@ import { createDeliveryActivity } from '@activities/createDeliveryActivity';
 import { calculateRouteActivity } from '@activities/calculateRouteActivity';
 import { updateDeliveryLocationActivity } from '@activities/updateDeliveryLocationActivity';
 import { notifyDelayActivity } from '@activities/notifyDelayActivity';
+import { generateDelayMessageActivity } from '@activities/generateDelayMessageActivity';
+import { updateDeliveryStatusActivity } from '@activities/updateDeliveryStatusActivity';
 
 async function run() {
   const activities = {
@@ -11,6 +13,8 @@ async function run() {
     calculateRouteActivity,
     updateDeliveryLocationActivity,
     notifyDelayActivity,
+    generateDelayMessageActivity,
+    updateDeliveryStatusActivity,
   };
 
   const worker = await Worker.create({

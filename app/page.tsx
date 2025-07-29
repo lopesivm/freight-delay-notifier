@@ -69,7 +69,7 @@ export default function FreightStatusPage() {
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">🚛 Freight Status</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Track and manage your freight deliveries in real-time
+            Track and manage your freight deliveries in (simulated) real-time
           </p>
         </div>
 
@@ -136,6 +136,9 @@ export default function FreightStatusPage() {
         open={updateModalOpen}
         onOpenChange={setUpdateModalOpen}
         onUpdate={handleUpdateLocation}
+        onMarkDelivered={async (id) => {
+          await deliveryService.markDelivered(id);
+        }}
       />
     </div>
   );

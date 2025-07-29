@@ -75,6 +75,29 @@ export class DeliveryService {
   /**
    * Update delivery location and ETA
    */
+  /**
+   * Update delivery status / notified flag
+   */
+  async updateDeliveryStatus(
+    id: string,
+    status: DeliveryStatus,
+    notified?: boolean,
+  ): Promise<Delivery> {
+    const delivery = await prisma.delivery.update({
+      where: { id },
+      data: {
+        status,
+        ...(typeof notified === 'boolean' ? { notified } : {}),
+      },
+    });
+
+    return {
+      ...delivery,
+      originalEtaEpochSecs: Number(delivery.originalEtaEpochSecs),
+      currentRouteDurationSeconds: delivery.currentRouteDurationSeconds,
+    };
+  }
+
   async updateDeliveryLocation(
     id: string,
     currentLocation: string,

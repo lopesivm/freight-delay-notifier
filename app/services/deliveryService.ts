@@ -17,7 +17,7 @@ class DeliveryService {
     }
   }
 
-  async createDelivery(input: CreateDeliveryInput): Promise<{ workflowId: string }> {
+  async createDelivery(input: Omit<CreateDeliveryInput, 'id'>): Promise<{ workflowId: string }> {
     try {
       const response = await axios.post(`${API_BASE_URL}`, input);
       if (response.data.success) {
@@ -26,6 +26,15 @@ class DeliveryService {
       throw new Error('Failed to create delivery');
     } catch (error) {
       console.error('Error creating delivery:', error);
+      throw error;
+    }
+  }
+
+  async markDelivered(id: string): Promise<void> {
+    try {
+      await axios.post(`${API_BASE_URL}/${id}/mark-delivered`);
+    } catch (error) {
+      console.error('Error marking delivered:', error);
       throw error;
     }
   }
